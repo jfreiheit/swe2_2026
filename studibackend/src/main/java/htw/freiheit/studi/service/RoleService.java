@@ -6,6 +6,8 @@ import htw.freiheit.studi.entity.Role;
 import htw.freiheit.studi.repository.RoleRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class RoleService {
 
@@ -19,6 +21,12 @@ public class RoleService {
         Role role = new Role(request.name());
         Role saved = roleRepository.save(role);
         return toResponse(saved);
+    }
+
+    public List<RoleResponseDTO> findAll() {
+        return roleRepository.findAll().stream()
+                .map(RoleService::toResponse)
+                .toList();
     }
 
     public static RoleResponseDTO toResponse(Role role) {
