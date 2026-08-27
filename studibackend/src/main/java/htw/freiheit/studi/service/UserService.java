@@ -12,6 +12,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @Service
 public class UserService {
 
@@ -42,6 +44,12 @@ public class UserService {
 
         User saved = userRepository.save(user);
         return toResponse(saved);
+    }
+
+    public List<UserResponseDTO> findAll() {
+        return userRepository.findAll().stream()
+                .map(UserService::toResponse)
+                .toList();
     }
 
     private Role getRoleOrThrow(Long roleId) {
