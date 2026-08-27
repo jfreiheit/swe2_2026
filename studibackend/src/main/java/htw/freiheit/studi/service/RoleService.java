@@ -4,7 +4,9 @@ import htw.freiheit.studi.dto.RoleRequestDTO;
 import htw.freiheit.studi.dto.RoleResponseDTO;
 import htw.freiheit.studi.entity.Role;
 import htw.freiheit.studi.repository.RoleRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -27,6 +29,16 @@ public class RoleService {
         return roleRepository.findAll().stream()
                 .map(RoleService::toResponse)
                 .toList();
+    }
+
+    public RoleResponseDTO findById(Long id) {
+        Role role = getRoleOrThrow(id);
+        return toResponse(role);
+    }
+
+    private Role getRoleOrThrow(Long id) {
+        return roleRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role nicht gefunden: " + id));
     }
 
     public static RoleResponseDTO toResponse(Role role) {
