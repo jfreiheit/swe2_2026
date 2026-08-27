@@ -78,6 +78,11 @@ public class UserService {
         return toResponse(saved);
     }
 
+    public void delete(Long id) {
+        User user = getUserOrThrow(id);
+        userRepository.delete(user);
+    }
+
     private Role getRoleOrThrow(Long roleId) {
         return roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role nicht gefunden: " + roleId));
