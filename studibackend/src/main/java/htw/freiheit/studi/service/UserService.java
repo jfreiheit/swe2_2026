@@ -52,9 +52,18 @@ public class UserService {
                 .toList();
     }
 
+    public UserResponseDTO findById(Long id) {
+        return toResponse(getUserOrThrow(id));
+    }
+
     private Role getRoleOrThrow(Long roleId) {
         return roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role nicht gefunden: " + roleId));
+    }
+
+    private User getUserOrThrow(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User nicht gefunden: " + id));
     }
 
     public static UserResponseDTO toResponse(User user) {
