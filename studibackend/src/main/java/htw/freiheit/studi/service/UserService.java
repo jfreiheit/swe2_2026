@@ -56,6 +56,28 @@ public class UserService {
         return toResponse(getUserOrThrow(id));
     }
 
+    public UserResponseDTO update(Long id, UserRequestDTO request) {
+        User user = getUserOrThrow(id);
+
+        if (userRepository.existsByUsernameAndIdNot(request.username(), id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "username bereits vergeben: " + request.username());
+        }
+        if (userRepository.existsByEmailAndIdNot(request.email(), id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "email bereits vergeben: " + request.email());
+        }
+        Role role = getRoleOrThrow(request.roleId());
+
+        user.setUsername(request.username());
+        user.setEmail(request.email());
+        user.setRole(role);
+        if (request.password() != null && !request.password().isBlank()) {
+            user.setPassword(passwordEncoder.encode(request.password()));
+        }
+
+        User saved = userRepository.save(user);
+        return toResponse(saved);
+    }
+
     private Role getRoleOrThrow(Long roleId) {
         return roleRepository.findById(roleId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role nicht gefunden: " + roleId));
