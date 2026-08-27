@@ -4,6 +4,7 @@ import htw.freiheit.studi.dto.RoleRequestDTO;
 import htw.freiheit.studi.dto.RoleResponseDTO;
 import htw.freiheit.studi.entity.Role;
 import htw.freiheit.studi.repository.RoleRepository;
+import htw.freiheit.studi.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -14,9 +15,11 @@ import java.util.List;
 public class RoleService {
 
     private final RoleRepository roleRepository;
+    private final UserRepository userRepository;
 
-    public RoleService(RoleRepository roleRepository) {
+    public RoleService(RoleRepository roleRepository, UserRepository userRepository) {
         this.roleRepository = roleRepository;
+        this.userRepository = userRepository;
     }
 
     public RoleResponseDTO create(RoleRequestDTO request) {
@@ -34,6 +37,15 @@ public class RoleService {
     public RoleResponseDTO findById(Long id) {
         Role role = getRoleOrThrow(id);
         return toResponse(role);
+    }
+
+    public void delete(Long id) {
+        Role role = getRoleOrThrow(id);
+        if (userRepository.existsByRoleId(role.getId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Role wird noch von Nutzern verwendet und kann nicht gelöscht werden: " + id);
+        }
+        roleRepository.delete(role);
     }
 
     private Role getRoleOrThrow(Long id) {
