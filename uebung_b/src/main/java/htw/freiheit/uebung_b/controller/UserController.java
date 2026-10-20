@@ -2,6 +2,7 @@ package htw.freiheit.uebung_b.controller;
 
 import htw.freiheit.uebung_b.dto.RoleResponseDTO;
 import htw.freiheit.uebung_b.dto.UserResponseDTO;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +22,6 @@ public class UserController
           new UserResponseDTO("user2", "user2@test.de", new RoleResponseDTO("user")),
           new UserResponseDTO("user3", "user3@test.de", new RoleResponseDTO("admin"))
         );
-        return ResponseEntity.ok().body(result);
+        return new ResponseEntity(result, HttpStatus.OK);
     }
 }
