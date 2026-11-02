@@ -9,6 +9,7 @@ import htw.freiheit.uebung_a.repository.RoleRepository;
 import htw.freiheit.uebung_a.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,12 +21,15 @@ public class UserController
 {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public UserController(UserRepository userRepository,
-                          RoleRepository roleRepository)
+                          RoleRepository roleRepository,
+                          PasswordEncoder passwordEncoder)
     {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping
@@ -40,15 +44,40 @@ public class UserController
     }
 
     @PostMapping
+    @RequestMapping("/register")
     public ResponseEntity<User> createUser(@RequestBody UserRequestDTO userRequestDTO)
     {
         Optional<Role> role = roleRepository.findByRole("user");
         if (role.isEmpty()) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        User createUser = userRequestDTO.toUser();
+        User createUser = new User();
+        createUser.setEmail(userRequestDTO.email());
         createUser.setRole(role.get());
+
+        String hashedPassword = passwordEncoder.encode(userRequestDTO.password());
+        createUser.setPassword(hashedPassword);
+
         User saved = userRepository.save(createUser);
         return new ResponseEntity<>(saved, HttpStatus.CREATED);
+    }
+
+    @PostMapping
+    @RequestMapping("/login")
+    public ResponseEntity<User> loginUser(@RequestBody UserRequestDTO userRequestDTO)
+    {
+        Optional<User> savedUser = userRepository.findByEmail(userRequestDTO.email());
+        if (savedUser.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        User user = savedUser.get(); // Nutzerin mit Email gefunden
+        String hashedPassword = user.getPassword();  // gespeicherte gehashte Passwort
+        String clearPassword = userRequestDTO.password(); // Klar-Passwort login
+
+        if (!passwordEncoder.matches(clearPassword, hashedPassword)) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);    // Passwoerter passen nicht
+        }
+        return new ResponseEntity<>(user, HttpStatus.OK); // eingelogged
     }
 }
