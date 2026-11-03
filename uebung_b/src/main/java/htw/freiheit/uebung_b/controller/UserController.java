@@ -7,8 +7,11 @@ import htw.freiheit.uebung_b.entity.Role;
 import htw.freiheit.uebung_b.entity.User;
 import htw.freiheit.uebung_b.repository.RoleRepository;
 import htw.freiheit.uebung_b.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
@@ -22,12 +25,16 @@ public class UserController
 {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     public UserController(UserRepository userRepository,
-                          RoleRepository roleRepository)
+                          RoleRepository roleRepository,
+                          PasswordEncoder passwordEncoder)
     {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping
@@ -42,6 +49,7 @@ public class UserController
     }
 
     @PostMapping
+    @RequestMapping("/register")
     public ResponseEntity<User> registerUser(@RequestBody UserRequestDTO userRequestDTO)
     {
         Optional<Role> userRole = roleRepository.findByRole("user");
@@ -54,9 +62,35 @@ public class UserController
         User create = new User();
         create.setEmail(userRequestDTO.email());
         create.setAccount(userRequestDTO.account());
-        create.setPassword(userRequestDTO.password());
+
+        String passwordInput = userRequestDTO.password();
+        String hashedPassword = passwordEncoder.encode(passwordInput);
+        create.setPassword(hashedPassword);
+
         create.setRole(userRole.get());
         User saved = this.userRepository.save(create);
         return new ResponseEntity(saved, HttpStatus.CREATED);
+    }
+
+    @PostMapping
+    @RequestMapping("/login")
+    public ResponseEntity<User> loginUser(@RequestBody UserRequestDTO userRequestDTO)
+    {
+         Optional<User> searchUser = userRepository.findByEmailOrAccount(
+                 userRequestDTO.email(),
+                 userRequestDTO.account()
+         );
+        if(searchUser.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+        User userInDB = searchUser.get();
+        logger.info("User found in DB: {}", userInDB.getAccount());
+        String hashedPassword = userInDB.getPassword();
+        String inputPassword = userRequestDTO.password();
+        if(passwordEncoder.matches(inputPassword, hashedPassword)) {
+            return new ResponseEntity(userInDB, HttpStatus.OK);
+        }
+        return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+
     }
 }
