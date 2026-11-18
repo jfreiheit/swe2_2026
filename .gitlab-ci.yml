@@ -1,0 +1,62 @@
+stages:
+  - test
+  - image
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  # Docker-in-Docker ohne TLS: der Docker-Daemon des Service "docker" auf Port 2375
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
+
+cache:
+  key:
+    files:
+      - studibackend/pom.xml
+  paths:
+    - .m2/repository
+
+build-and-test:
+  stage: test
+  image: eclipse-temurin:25-jdk
+  services:
+    - name: postgres:17
+      alias: postgres
+    - name: docker:29.10-dind
+      alias: docker
+  variables:
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_DB: studibackend_dev
+    DB_URL: jdbc:postgresql://postgres:5432/studibackend_dev
+    DB_USERNAME: postgres
+    DB_PASSWORD: postgres
+    # Testcontainers: gestartete Container sind unter dem Host "docker" erreichbar
+    TESTCONTAINERS_HOST_OVERRIDE: docker
+  script:
+    - cd studibackend
+    - ./mvnw -B clean verify
+  artifacts:
+    when: always
+    paths:
+      - studibackend/target/surefire-reports/
+    reports:
+      junit: studibackend/target/surefire-reports/TEST-*.xml
+    expire_in: 1 week
+
+docker-image:
+  stage: image
+  image: docker:29.10-cli
+  services:
+    - name: docker:29.10-dind
+      alias: docker
+  variables:
+    IMAGE: $CI_REGISTRY_IMAGE/studibackend
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG =~ /^v/
+  script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - docker build -t "$IMAGE:$CI_COMMIT_SHORT_SHA" studibackend
+    - if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then docker tag "$IMAGE:$CI_COMMIT_SHORT_SHA" "$IMAGE:latest"; fi
+    - if [ -n "$CI_COMMIT_TAG" ]; then docker tag "$IMAGE:$CI_COMMIT_SHORT_SHA" "$IMAGE:${CI_COMMIT_TAG#v}"; fi
+    - docker push --all-tags "$IMAGE"
