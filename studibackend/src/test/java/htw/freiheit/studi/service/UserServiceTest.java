@@ -4,6 +4,8 @@ import htw.freiheit.studi.dto.UserRequestDTO;
 import htw.freiheit.studi.dto.UserResponseDTO;
 import htw.freiheit.studi.entity.Role;
 import htw.freiheit.studi.entity.User;
+import htw.freiheit.studi.exception.ConflictException;
+import htw.freiheit.studi.exception.ResourceNotFoundException;
 import htw.freiheit.studi.repository.RoleRepository;
 import htw.freiheit.studi.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,9 +15,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
@@ -86,9 +86,8 @@ class UserServiceTest {
 
         // Act + Assert
         assertThatThrownBy(() -> userService.create(request))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(HttpStatus.CONFLICT);
+                .isInstanceOf(ConflictException.class)
+                .hasMessage("username bereits vergeben: anna");
 
         verify(userRepository, never()).save(any());
     }
@@ -102,9 +101,8 @@ class UserServiceTest {
 
         // Act + Assert
         assertThatThrownBy(() -> userService.create(request))
-                .isInstanceOf(ResponseStatusException.class)
-                .extracting(e -> ((ResponseStatusException) e).getStatusCode())
-                .isEqualTo(HttpStatus.NOT_FOUND);
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessage("Role nicht gefunden: 2");
 
         verify(passwordEncoder, never()).encode(any());
         verify(userRepository, never()).save(any());

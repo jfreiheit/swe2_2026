@@ -3,6 +3,7 @@ package htw.freiheit.studi.controller;
 import htw.freiheit.studi.dto.RoleResponseDTO;
 import htw.freiheit.studi.dto.UserRequestDTO;
 import htw.freiheit.studi.dto.UserResponseDTO;
+import htw.freiheit.studi.exception.ResourceNotFoundException;
 import htw.freiheit.studi.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -69,7 +69,7 @@ class UserControllerWebMvcTest {
     @Test
     void getUserById_WhenUserDoesNotExist_ShouldReturnNotFound() {
         when(userService.findById(42L))
-                .thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "User nicht gefunden: 42"));
+                .thenThrow(new ResourceNotFoundException("User", 42L));
 
         assertThat(mvc.get().uri("/user/{id}", 42))
                 .hasStatus(HttpStatus.NOT_FOUND);
