@@ -46,6 +46,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/RoleResponseDTO"
           description: Rolle angelegt
+        "400":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Eingabedaten ungültig (Details im Feld `errors`)
       summary: Rolle anlegen
       tags:
       - Role
@@ -140,6 +146,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/UserResponseDTO"
           description: Nutzer angelegt
+        "400":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Eingabedaten ungültig (Details im Feld `errors`)
         "404":
           content:
             application/problem+json:
@@ -207,7 +219,7 @@ paths:
       tags:
       - User
     put:
-      description: "Ersetzt `username`, `email` und Rolle. Ist `password` leer, bleibt\
+      description: "Ersetzt `username`, `email` und Rolle. Fehlt `password`, bleibt\
         \ das bisherige Passwort erhalten."
       operationId: updateUser
       parameters:
@@ -232,6 +244,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/UserResponseDTO"
           description: Nutzer aktualisiert
+        "400":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Eingabedaten ungültig (Details im Feld `errors`)
         "404":
           content:
             application/problem+json:
@@ -274,8 +292,11 @@ components:
       properties:
         name:
           type: string
-          description: Eindeutiger Name der Rolle
+          description: Eindeutiger Name der Rolle (nur Kleinbuchstaben)
           example: tutor
+          maxLength: 30
+          minLength: 0
+          pattern: "^[a-z]*$"
       required:
       - name
     RoleResponseDTO:
@@ -302,23 +323,31 @@ components:
           format: email
           description: Eindeutige E-Mail-Adresse
           example: anna@htw-berlin.de
+          maxLength: 254
+          minLength: 0
         password:
           type: string
           format: password
           description: "Passwort im Klartext; wird nur gehasht gespeichert. Pflicht\
-            \ beim Anlegen (POST), beim Aktualisieren (PUT) optional: leer lassen,\
-            \ um das bisherige Passwort zu behalten."
+            \ beim Anlegen (POST), beim Aktualisieren (PUT) optional: weglassen, um\
+            \ das bisherige Passwort zu behalten."
           example: geheim123
+          maxLength: 72
+          minLength: 8
           writeOnly: true
         roleId:
           type: integer
           format: int64
           description: ID einer vorhandenen Rolle
           example: 1
+          exclusiveMinimum: 0
         username:
           type: string
           description: Eindeutiger Nutzername
           example: anna
+          maxLength: 30
+          minLength: 3
+          pattern: "^[a-zA-Z0-9._-]*$"
       required:
       - email
       - roleId

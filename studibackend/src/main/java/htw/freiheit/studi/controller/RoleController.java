@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -35,8 +36,11 @@ public class RoleController {
 
     @Operation(summary = "Rolle anlegen")
     @ApiResponse(responseCode = "201", description = "Rolle angelegt")
+    @ApiResponse(responseCode = "400", description = "Eingabedaten ungültig (Details im Feld `errors`)",
+            content = @Content(mediaType = "application/problem+json",
+                    schema = @Schema(implementation = ProblemDetail.class)))
     @PostMapping
-    public ResponseEntity<RoleResponseDTO> createRole(@RequestBody RoleRequestDTO request) {
+    public ResponseEntity<RoleResponseDTO> createRole(@Valid @RequestBody RoleRequestDTO request) {
         RoleResponseDTO created = roleService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }

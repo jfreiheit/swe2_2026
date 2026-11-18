@@ -3,15 +3,18 @@ package htw.freiheit.studi.controller;
 import htw.freiheit.studi.dto.UserRequestDTO;
 import htw.freiheit.studi.dto.UserResponseDTO;
 import htw.freiheit.studi.service.UserService;
+import htw.freiheit.studi.validation.OnCreate;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,6 +41,9 @@ public class UserController {
             description = "Legt einen neuen Nutzer an. Das Passwort wird gehasht gespeichert "
                     + "und nie zurückgegeben.")
     @ApiResponse(responseCode = "201", description = "Nutzer angelegt")
+    @ApiResponse(responseCode = "400", description = "Eingabedaten ungültig (Details im Feld `errors`)",
+            content = @Content(mediaType = "application/problem+json",
+                    schema = @Schema(implementation = ProblemDetail.class)))
     @ApiResponse(responseCode = "404", description = "Rolle mit `roleId` existiert nicht",
             content = @Content(mediaType = "application/problem+json",
                     schema = @Schema(implementation = ProblemDetail.class)))
@@ -45,7 +51,8 @@ public class UserController {
             content = @Content(mediaType = "application/problem+json",
                     schema = @Schema(implementation = ProblemDetail.class)))
     @PostMapping
-    public ResponseEntity<UserResponseDTO> createUser(@RequestBody UserRequestDTO request) {
+    public ResponseEntity<UserResponseDTO> createUser(
+            @Validated(OnCreate.class) @RequestBody UserRequestDTO request) {
         UserResponseDTO created = userService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -69,9 +76,12 @@ public class UserController {
     }
 
     @Operation(summary = "Nutzer aktualisieren",
-            description = "Ersetzt `username`, `email` und Rolle. Ist `password` leer, bleibt das "
+            description = "Ersetzt `username`, `email` und Rolle. Fehlt `password`, bleibt das "
                     + "bisherige Passwort erhalten.")
     @ApiResponse(responseCode = "200", description = "Nutzer aktualisiert")
+    @ApiResponse(responseCode = "400", description = "Eingabedaten ungültig (Details im Feld `errors`)",
+            content = @Content(mediaType = "application/problem+json",
+                    schema = @Schema(implementation = ProblemDetail.class)))
     @ApiResponse(responseCode = "404", description = "Nutzer oder Rolle existiert nicht",
             content = @Content(mediaType = "application/problem+json",
                     schema = @Schema(implementation = ProblemDetail.class)))
@@ -81,7 +91,7 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> updateUser(
             @Parameter(description = "ID des Nutzers", example = "1") @PathVariable Long id,
-            @RequestBody UserRequestDTO request) {
+            @Valid @RequestBody UserRequestDTO request) {
         return ResponseEntity.ok(userService.update(id, request));
     }
 
