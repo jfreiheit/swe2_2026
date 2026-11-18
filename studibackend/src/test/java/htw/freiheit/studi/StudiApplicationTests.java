@@ -8,8 +8,10 @@ import org.springframework.test.context.ActiveProfiles;
 @ActiveProfiles("test")
 class StudiApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+    @Test
+    @SuppressWarnings("PMD.UnitTestShouldIncludeAssert") // Test schlaegt fehl, wenn der Context nicht startet
+    void contextLoads() {
+        // bewusst leer
+    }
 
 }
