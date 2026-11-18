@@ -1,0 +1,10 @@
+# Nicht in den Build-Kontext: Build-Ergebnisse, IDE-Dateien, Geheimnisse
+target/
+.idea/
+*.iml
+.vscode/
+.git/
+**/application-local.properties
+compose.yaml
+Dockerfile
+.dockerignore
