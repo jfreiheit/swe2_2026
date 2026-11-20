@@ -1,0 +1,37 @@
+name: studibackend
+
+services:
+  db:
+    image: postgres:17.10-alpine
+    environment:
+      POSTGRES_DB: studibackend_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d studibackend_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    profiles: ["app"]
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://db:5432/studibackend_dev
+      DB_USERNAME: postgres
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      # Ohne Migrationswerkzeug (Flyway/Liquibase) muss Hibernate das Schema anlegen.
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    ports:
+      - "${APP_PORT:-8080}:8080"
+
+volumes:
+  db-data:
