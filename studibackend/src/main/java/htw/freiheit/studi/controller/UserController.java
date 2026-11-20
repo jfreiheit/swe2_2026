@@ -1,6 +1,5 @@
 package htw.freiheit.studi.controller;
 
-import htw.freiheit.studi.dto.RoleResponseDTO;
 import htw.freiheit.studi.dto.UserRequestDTO;
 import htw.freiheit.studi.dto.UserResponseDTO;
 import htw.freiheit.studi.service.UserService;
@@ -37,14 +36,7 @@ public class UserController {
     @GetMapping
     public ResponseEntity<List<UserResponseDTO>> getUsers() {
 
-        List<UserResponseDTO> result = List.of(
-                new UserResponseDTO(1L, "nameone", "one@mail.de", new RoleResponseDTO(1L, "admin")),
-                new UserResponseDTO(2L, "nametwo", "two@mail.de", new RoleResponseDTO(2L, "user"))
-        );
-
-        return ResponseEntity.ok(result);
-
-        // return ResponseEntity.ok(userService.findAll());
+        return ResponseEntity.ok(userService.findAll());
     }
 
     @GetMapping("/{id}")
