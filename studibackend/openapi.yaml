@@ -1,0 +1,348 @@
+openapi: 3.1.0
+info:
+  description: "REST-API zur Verwaltung von Nutzern und Rollen (Lehrbeispiel SWE2,\
+    \ HTW Berlin)."
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: Studi-Backend API
+  version: 1.0.0
+servers:
+- description: Aktueller Server
+  url: /
+tags:
+- description: "Rollen verwalten, die Nutzern zugeordnet werden"
+  name: Role
+- description: "Nutzer anlegen, lesen, ändern und löschen"
+  name: User
+paths:
+  /role:
+    get:
+      operationId: getRoles
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RoleResponseDTO"
+          description: Liste aller Rollen
+      summary: Alle Rollen lesen
+      tags:
+      - Role
+    post:
+      operationId: createRole
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoleRequestDTO"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleResponseDTO"
+          description: Rolle angelegt
+      summary: Rolle anlegen
+      tags:
+      - Role
+  /role/{id}:
+    delete:
+      description: "Eine Rolle kann nur gelöscht werden, wenn ihr kein Nutzer mehr\
+        \ zugeordnet ist."
+      operationId: deleteRole
+      parameters:
+      - description: ID der Rolle
+        example: 1
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: Rolle gelöscht
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Rolle existiert nicht
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Rolle ist noch Nutzern zugeordnet
+      summary: Rolle löschen
+      tags:
+      - Role
+    get:
+      operationId: getRoleById
+      parameters:
+      - description: ID der Rolle
+        example: 1
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleResponseDTO"
+          description: Rolle gefunden
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Rolle existiert nicht
+      summary: Eine Rolle lesen
+      tags:
+      - Role
+  /user:
+    get:
+      operationId: getUsers
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserResponseDTO"
+          description: Liste aller Nutzer (ggf. leer)
+      summary: Alle Nutzer lesen
+      tags:
+      - User
+    post:
+      description: Legt einen neuen Nutzer an. Das Passwort wird gehasht gespeichert
+        und nie zurückgegeben.
+      operationId: createUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRequestDTO"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponseDTO"
+          description: Nutzer angelegt
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Rolle mit `roleId` existiert nicht
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: '`username` oder `email` bereits vergeben'
+      summary: Nutzer anlegen
+      tags:
+      - User
+  /user/{id}:
+    delete:
+      operationId: deleteUser
+      parameters:
+      - description: ID des Nutzers
+        example: 1
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "204":
+          description: Nutzer gelöscht
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Nutzer existiert nicht
+      summary: Nutzer löschen
+      tags:
+      - User
+    get:
+      operationId: getUserById
+      parameters:
+      - description: ID des Nutzers
+        example: 1
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponseDTO"
+          description: Nutzer gefunden
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Nutzer existiert nicht
+      summary: Einen Nutzer lesen
+      tags:
+      - User
+    put:
+      description: "Ersetzt `username`, `email` und Rolle. Ist `password` leer, bleibt\
+        \ das bisherige Passwort erhalten."
+      operationId: updateUser
+      parameters:
+      - description: ID des Nutzers
+        example: 1
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRequestDTO"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponseDTO"
+          description: Nutzer aktualisiert
+        "404":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: Nutzer oder Rolle existiert nicht
+        "409":
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/ProblemDetail"
+          description: '`username` oder `email` bereits vergeben'
+      summary: Nutzer aktualisieren
+      tags:
+      - User
+components:
+  schemas:
+    ProblemDetail:
+      type: object
+      properties:
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+        properties:
+          type: object
+          additionalProperties: {}
+        status:
+          type: integer
+          format: int32
+        title:
+          type: string
+        type:
+          type: string
+          format: uri
+    RoleRequestDTO:
+      type: object
+      description: Daten zum Anlegen einer Rolle
+      properties:
+        name:
+          type: string
+          description: Eindeutiger Name der Rolle
+          example: tutor
+      required:
+      - name
+    RoleResponseDTO:
+      type: object
+      description: "Eine Rolle, wie sie die API zurückgibt"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Von der Datenbank vergebene ID
+          example: 1
+        name:
+          type: string
+          example: user
+      required:
+      - id
+      - name
+    UserRequestDTO:
+      type: object
+      description: Daten zum Anlegen oder Aktualisieren eines Nutzers
+      properties:
+        email:
+          type: string
+          format: email
+          description: Eindeutige E-Mail-Adresse
+          example: anna@htw-berlin.de
+        password:
+          type: string
+          format: password
+          description: "Passwort im Klartext; wird nur gehasht gespeichert. Pflicht\
+            \ beim Anlegen (POST), beim Aktualisieren (PUT) optional: leer lassen,\
+            \ um das bisherige Passwort zu behalten."
+          example: geheim123
+          writeOnly: true
+        roleId:
+          type: integer
+          format: int64
+          description: ID einer vorhandenen Rolle
+          example: 1
+        username:
+          type: string
+          description: Eindeutiger Nutzername
+          example: anna
+      required:
+      - email
+      - roleId
+      - username
+    UserResponseDTO:
+      type: object
+      description: "Ein Nutzer, wie ihn die API zurückgibt (ohne Passwort)"
+      properties:
+        email:
+          type: string
+          format: email
+          example: anna@htw-berlin.de
+        id:
+          type: integer
+          format: int64
+          description: Von der Datenbank vergebene ID
+          example: 1
+        role:
+          $ref: "#/components/schemas/RoleResponseDTO"
+        username:
+          type: string
+          example: anna
+      required:
+      - email
+      - id
+      - role
+      - username

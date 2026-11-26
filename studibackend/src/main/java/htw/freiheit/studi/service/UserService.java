@@ -5,12 +5,12 @@ import htw.freiheit.studi.dto.UserRequestDTO;
 import htw.freiheit.studi.dto.UserResponseDTO;
 import htw.freiheit.studi.entity.Role;
 import htw.freiheit.studi.entity.User;
+import htw.freiheit.studi.exception.ConflictException;
+import htw.freiheit.studi.exception.ResourceNotFoundException;
 import htw.freiheit.studi.repository.RoleRepository;
 import htw.freiheit.studi.repository.UserRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -29,10 +29,10 @@ public class UserService {
 
     public UserResponseDTO create(UserRequestDTO request) {
         if (userRepository.existsByUsername(request.username())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "username bereits vergeben: " + request.username());
+            throw new ConflictException("username bereits vergeben: " + request.username());
         }
         if (userRepository.existsByEmail(request.email())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "email bereits vergeben: " + request.email());
+            throw new ConflictException("email bereits vergeben: " + request.email());
         }
         Role role = getRoleOrThrow(request.roleId());
 
@@ -60,10 +60,10 @@ public class UserService {
         User user = getUserOrThrow(id);
 
         if (userRepository.existsByUsernameAndIdNot(request.username(), id)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "username bereits vergeben: " + request.username());
+            throw new ConflictException("username bereits vergeben: " + request.username());
         }
         if (userRepository.existsByEmailAndIdNot(request.email(), id)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "email bereits vergeben: " + request.email());
+            throw new ConflictException("email bereits vergeben: " + request.email());
         }
         Role role = getRoleOrThrow(request.roleId());
 
@@ -85,12 +85,12 @@ public class UserService {
 
     private Role getRoleOrThrow(Long roleId) {
         return roleRepository.findById(roleId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Role nicht gefunden: " + roleId));
+                .orElseThrow(() -> new ResourceNotFoundException("Role", roleId));
     }
 
     private User getUserOrThrow(Long id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User nicht gefunden: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("User", id));
     }
 
     public static UserResponseDTO toResponse(User user) {

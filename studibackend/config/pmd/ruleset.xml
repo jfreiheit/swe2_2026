@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="studibackend"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>PMD-Regeln fuer studibackend</description>
+
+    <!-- Best Practices: z.B. ungenutzte Variablen, Parameter, private Methoden -->
+    <rule ref="category/java/bestpractices.xml">
+        <exclude name="UnitTestContainsTooManyAsserts"/>
+        <exclude name="UnitTestAssertionsShouldIncludeMessage"/>
+        <exclude name="GuardLogStatement"/>
+        <exclude name="UnitTestShouldIncludeAssert"/>
+    </rule>
+
+    <!-- MockMvc prueft mit andExpect(...) - das zaehlt auch als Assertion -->
+    <rule ref="category/java/bestpractices.xml/UnitTestShouldIncludeAssert">
+        <properties>
+            <property name="extraAssertMethodNames" value="andExpect"/>
+        </properties>
+    </rule>
+
+    <!-- Fehleranfaellige Konstrukte: z.B. == bei Strings, leere catch-Bloecke -->
+    <rule ref="category/java/errorprone.xml">
+        <exclude name="AvoidDuplicateLiterals"/>
+        <exclude name="AvoidLiteralsInIfCondition"/>
+        <exclude name="MissingSerialVersionUID"/>
+    </rule>
+
+    <!-- Design: nur ausgewaehlte Regeln -->
+    <rule ref="category/java/design.xml/CyclomaticComplexity"/>
+    <rule ref="category/java/design.xml/CognitiveComplexity"/>
+    <rule ref="category/java/design.xml/SimplifyBooleanReturns"/>
+    <rule ref="category/java/design.xml/SingularField"/>
+
+    <!-- Testmethoden duerfen Unterstriche enthalten -->
+    <rule ref="category/java/codestyle.xml/MethodNamingConventions">
+        <properties>
+            <property name="junitJupiterTestPattern" value="[a-z][a-zA-Z0-9_]*"/>
+        </properties>
+    </rule>
+</ruleset>
